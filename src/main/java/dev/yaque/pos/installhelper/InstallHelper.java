@@ -60,8 +60,8 @@ public class InstallHelper {
     public static void printHelp(){
         System.out.println("+---------------------------------------------------------------------------------------------+");
         System.out.println(" Remember the place to locate the direct acess is ");
-        System.out.println(" " + System.getenv("APPDATA") + "\\Microsoft\\Windows\\Start Menu\\Programs" );
-        System.out.println(" The icon is located at: " + BASE_INSTALL_PATH + "\\reports\\com\\openbravo\\images");
+        System.out.println(String.format(" %s%s", System.getenv("APPDATA"),  "\\Microsoft\\Windows\\Start Menu\\Programs"));
+        System.out.println(String.format(" The icon is located at: %s%s", BASE_INSTALL_PATH, "reports\\com\\openbravo\\images"));
     }
     
     public static Config analizeArgs(String... args){
@@ -72,6 +72,10 @@ public class InstallHelper {
             
         }
         providedArg = args[0];
+        if("-h".equals(providedArg) || "--help".equals(providedArg)){
+            printHelp();
+            System.exit(0);
+        }
         Config config = null;
         try{
             URL url = new URL(providedArg);
@@ -158,7 +162,7 @@ public class InstallHelper {
     
     public static void unzipFolder(Path source, Path target) throws IOException {
         var sTarget = target.toString();
-        LOG.info("Uncompressing at" + sTarget);
+        LOG.info("Uncompressing at " + sTarget);
         new ZipFile(source.toFile())
                 .extractAll(sTarget);
     }
