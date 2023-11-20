@@ -18,6 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
@@ -141,16 +143,25 @@ public class InstallHelper {
             System.exit(-1);
             return null;
         }
-
-        ReadableByteChannel readableByteChannel = Channels.newChannel(connection.getInputStream());
+        Instant start = Instant.now();
+        ProgressBar progress = new ProgressBar();
+        progress.setProgress(0);
+        progress.print();
         File tempFile = File.createTempFile("unicenta", ".tmp");
-        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            long length = connection.getContentLengthLong();
-            while (length > 0) {
-                long written = fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-                length -= written;
+        try (ReadableByteChannel readableByteChannel = Channels.newChannel(connection.getInputStream());
+             FileOutputStream fos = new FileOutputStream(tempFile)) {
+            long leftWritten = connection.getContentLengthLong(), length =  leftWritten;
+            long chunckSize = 1024 ;
+            while (leftWritten > 0) {
+                long written = fos.getChannel().transferFrom(readableByteChannel, length - leftWritten, chunckSize);
+                leftWritten -= written;
+                progress.setProgress( (int) (100 * (length - leftWritten) / length));
+                progress.print();
             }
         }
+        Instant finish = Instant.now();
+        Duration duration = Duration.between(start, finish);
+        System.out.println(String.format("Elapsed: %d minutes,  %d seconds (%d millis)", duration.toMinutes(), duration.toSecondsPart(), duration.toMillis()) );
         if (keepFile) {
             LOG.info(() -> " created -> " + tempFile);
         } else {
