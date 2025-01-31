@@ -138,8 +138,11 @@ public class InstallHelper {
         }
         
         String contentType = connection.getContentType();
-        if(!contentType.equalsIgnoreCase("application/zip")){
-            LOG.severe("The file is not a zip file. Contect-Type " + contentType);
+        String contentDisposition = connection.getHeaderField("Content-Disposition");
+        
+        if (!(contentType.equalsIgnoreCase("application/zip")
+                || (contentType.equalsIgnoreCase("application/binary") && contentDisposition.contains("attachment") && contentDisposition.contains(".zip")))) {
+            LOG.severe("The file is not a zip file. Content-Type '" + contentType + "' Content-Disposition '"+ contentDisposition+ "'");
             System.exit(-1);
             return null;
         }
